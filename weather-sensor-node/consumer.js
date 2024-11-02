@@ -1,31 +1,63 @@
-
 const { Kafka } = require('kafkajs');
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 
-// Creamos una instancia de Kafka, configurando el cliente
-const kafka = new Kafka({
-    clientId: 'weather-sensor', // ID del cliente para identificar la aplicación
-    brokers: ['lab9.alumchat.lol:9092'], // Lista de brokers Kafka a los que conectarse
+// Configuración del servidor Express
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Servir archivos estáticos desde el directorio 'public'
+app.use(express.static('public'));
+
+// Iniciar el servidor en el puerto 3000
+server.listen(3000, () => {
+    console.log('Servidor web iniciado en http://localhost:3000');
 });
 
-// Creamos un consumidor, especificando el ID del grupo al que pertenece
+// Variables para almacenar los datos
+let all_temp = [];
+let all_hume = [];
+let all_wind = [];
+
+// Configuración de Kafka
+const kafka = new Kafka({
+    clientId: 'weather-sensor',
+    brokers: ['lab9.alumchat.lol:9092'],
+});
+
 const consumer = kafka.consumer({ groupId: 'weather-sensor-group' });
 
-// Función asíncrona principal para ejecutar el consumidor
+// Función principal
 const run = async () => {
-    // Conectamos el consumidor al broker
+    // Conectar al consumidor
     await consumer.connect();
+    console.log('Conectado al consumidor de Kafka');
 
-    // Nos suscribimos al topic '201579', indicando que queremos recibir mensajes desde el principio
+    // Suscribirse al tópico
     await consumer.subscribe({ topic: '201579', fromBeginning: true });
 
-    // Configuramos el consumidor para ejecutar una función cada vez que recibe un mensaje
+    // Procesar mensajes entrantes
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
-            // Imprimimos el contenido del mensaje recibido en la consola
-            console.log(`Received message: ${message.value.toString()}`);
+            const mensaje = message.value.toString();
+            console.log(`Mensaje recibido: ${mensaje}`);
+
+            // Procesar el mensaje
+            const payload = JSON.parse(mensaje);
+            all_temp.push(payload.temperatura);
+            all_hume.push(payload.humedad);
+            all_wind.push(payload.direccion_viento);
+
+            // Emitir los datos al cliente a través de Socket.IO
+            io.emit('nuevos-datos', {
+                temperatura: payload.temperatura,
+                humedad: payload.humedad,
+                direccion_viento: payload.direccion_viento,
+            });
         },
     });
 };
 
-// Llamamos a la función run y manejamos cualquier error que ocurra
 run().catch(console.error);

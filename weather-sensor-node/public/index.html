@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estación Meteorológica en Tiempo Real</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Importar Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Vincular el archivo CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Estación Meteorológica en Tiempo Real</h1>
+    </header>
+    <main>
+        <div class="chart-container">
+            <canvas id="temperaturaChart" width="800" height="400"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="humedadChart" width="800" height="400"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="direccionVientoChart" width="800" height="400"></canvas>
+        </div>
+    </main>
+    <footer>
+        <p>Datos proporcionados por el sensor de clima.</p>
+    </footer>
+    <script src="client.js"></script>
+</body>
+</html>
